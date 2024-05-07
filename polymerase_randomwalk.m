@@ -2,7 +2,7 @@
 %simulate a 2D random walk of the filament tip on surface 
 % the walk is effectively diffusing point tied by an effective elastic spring to the center 
 %elastic spring part not yet modeled 
-
+ 
 clc;    % Clear the command window.
 clearvars;
 close all;  % Close all figs
@@ -11,8 +11,8 @@ workspace;  % Make sure the workspace panel is showing.
 
 % Define parameters
 radius = 20;    % filament movement radius variable
-num_discs = 100;  % Number of discs or binding points 
-target = radius / 25;   % Membrane disc variable size
+num_discs = 10;  % Number of discs or binding points 
+target = radius / 50;   % Membrane disc variable size
 
 % create a grid for cell
 [X, Y] = meshgrid(linspace(-radius, radius, 1000), linspace(-radius, radius, 1000));
@@ -70,6 +70,13 @@ ax.XAxisLocation = 'origin';
 ax.YAxisLocation = 'origin';
 hold on;
 
+% Open a file for writing
+fileID = fopen('hitcounterwithsteps.csv', 'w');
+
+% Write header to the CSV file
+fprintf(fileID, 'Target,Hit Counter,Steps to Hit\n');
+
+
 %Random Walk Section
 % specify the number of time steps in our random walk
 tsteps=1000;
@@ -92,6 +99,18 @@ counter = 0 %initialize step counter
 results = zeros(1, tsteps);  % array for counter results
 hit_counter = zeros(1, num_discs); % Initialize hit counter for each target
  
+
+
+% plot discs
+circle_x = cell(1, num_discs); % Initialize array for circle x-coordinates for each origin 
+circle_y = cell(1, num_discs); %
+
+for i = 1:num_discs
+    % Calculate coordinates for each circle
+    circle_x{i} = org_coord(i, 1) + target * cos(theta);
+    circle_y{i} = org_coord(i, 2) + target * sin(theta);
+end
+
 %initialize arrays to hold the x and y positions for walk
 x=zeros(tsteps,1);
 y=zeros(tsteps,1);
@@ -100,19 +119,22 @@ y(1) = 0.0;
 
 %Random Walk
 for i = 2 :tsteps
-	% Check if particle hits boundary in x
+	% particle random step and position change 
     delx = 2 * (randi(2) - 1) - 1;   %random step 
 	xbound = x(i-1) + delx*delta;    % new position 
     dely = 2 * (randi(2) - 1) - 1;
     ybound= y(i-1) + dely*delta;
+
     %checks if particle is at any target
-	for k = 1:num_discs
-        circle_x = circle_coordinates{k}(1, :);  % x-coordinates of the k-th circle
-        circle_y = circle_coordinates{k}(2, :); 
-            if any(abs(xbound - circle_x) <= step_size/4 & abs(ybound - circle_y) <= step_size/4)
+	for k = 1:num_discs       
+            if any(abs(xbound - circle_x{k}) <= step_size/4 & abs(ybound - circle_y{k}) <= step_size/4)
                 hit_counter(k) = hit_counter(k) + 1; % Increment hit counter for the target
-                disp('random walk has hit a target!');
-                disp(num2str(hit_counter))
+                fprintf('Random walk has hit target %d!\n', k);
+                fprintf('Hit counter: %d\n', hit_counter(k));
+                % Calculate the number of steps to hit the target
+                steps_to_hit = i - sum(hit_counter(1:k-1));
+                % Write data to the CSV file
+                fprintf(fileID, '%d,%d,%d\n', k, hit_counter(k), steps_to_hit);
             %continue;
             elseif  norm([xbound,ybound]) >= radius %is it beyond the boundary?
                 x(i)=x(i-2);
