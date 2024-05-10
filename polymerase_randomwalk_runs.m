@@ -11,8 +11,8 @@ workspace;  % Make sure the workspace panel is showing.
 
 % Define parameters here
 radius = 20;    % filament movement radius variable
-num_discs = 6;  % Number of discs or binding points 
-target = radius / 40;   % Membrane disc variable size
+num_discs = 20;  % Number of discs or binding points 
+target = radius / 10;   % Membrane disc variable size
 tsteps=10000;  % number of time steps in random walk
 %Repeat random walk%%%%% 
 num_runs = 1000;%how many times to run code
@@ -27,18 +27,20 @@ rectangle('Position', pos_outer, 'Curvature', [1 1], 'LineWidth', 1);
 axis square;
 hold on;
 
-
 %%%Disc plotting section%%%%%%%%%%%%%%%%%%%%%%%%% 
 % warnings for constant Z data
 warning('off', 'MATLAB:contour:ConstantData');
 
+% calculate coordinates for inside red circles
+circ_points = target*(radius*2.5);  % Number of points per circle
 org_coord = zeros(num_discs, 2); % stores all the origins 
 circle_coord = cell(num_discs, 2);  % stores all the coordinates 
-circle_x = cell(num_discs, 1);  % Initialize as cell array
-circle_y = cell(num_discs, 1);  % Initialize as cell array
-theta = linspace(0, 2*pi, 100); % Angles from 0 to 2*pi
+  
+% Calculate coordinates for points within the circle
+radius_points = target * sqrt(rand(1, circ_points)); % Random radius values
+angle_points = linspace(0, 2*pi, circ_points); % Angles for equally spaced points
 
-for i = 1:num_discs
+for i = 1:num_discs   % place all circles 
     % calculate grid row and column
     row = floor((i - 1) / sqrt(num_discs)) + 1;
     col = mod(i - 1, sqrt(num_discs)) + 1;
@@ -49,29 +51,31 @@ for i = 1:num_discs
     % store the origin coordinates
     org_coord(i, :) = [center_x, center_y];
 
-    % calculate coordinates for inside red circles
-    circ_points = 10;  % Number of points per circle
-    spacing = 2 * pi / circ_points;  % Spacing between points
-
     % Initialize arrays to store x and y coordinates
-    circle_x = zeros(1, circ_points);
-    circle_y = zeros(1, circ_points);
-
+    %circle_x = zeros(1, circ_points);
+    %circle_y = zeros(1, circ_points);
+    circle_x_point = cell(1, num_discs);
+    circle_y_point = cell(1, num_discs);
     % Calculate coordinates for each point on the circle
     for j = 1:circ_points
-        angle = (j - 1) * spacing;  % Compute angle
-        
-        % Compute x and y coordinates
-        circle_x(j) = center_x + target * cos(angle);
-        circle_y(j) = center_y + target * sin(angle);
+        % Generate random radius within the target radius
+        r = rand(1) * target;
+        % Generate random angle
+        angle = rand(1) * 2 * pi;
+        % Compute x and y coordinates using polar coordinates
+        circle_x_point{j} = center_x + r * cos(angle);
+        circle_y_point{j} = center_y + r * sin(angle);
     end
-    
+   
     % store the full coordinates 
-    circle_coord{i} = [circle_x; circle_y];
+    circle_coord{i} = [circle_x_point; circle_y_point];
 
     % plot the disc clipped by the larger circle mask
     disc_masked = mask & ((X - center_x).^2 + (Y - center_y).^2 <= target^2);
     contour(X, Y, disc_masked, [0.5 0.5], 'r', 'LineWidth', 1);
+
+    % Plot the points within the circle to check them 
+    %scatter(circle_x_point, circle_y_point, 10, 'b', 'filled');
 end
 
 % restore warning state
@@ -123,15 +127,19 @@ for run = 1:num_runs
     y(1) = 0.0;
     hit_counter(:) = 0;
 
-circle_x = cell(num_discs, 1);  % Initialize as cell array
-circle_y = cell(num_discs, 1);  % Initialize as cell array
+%circle_x = cell(num_discs, 1);  % Initialize as cell array
+%circle_y = cell(num_discs, 1);  % Initialize as cell array
 
 for i = 1:num_discs
     % Calculate coordinates for each circle
     circle_x{i} = org_coord(i, 1) + target * cos(theta);
     circle_y{i} = org_coord(i, 2) + target * sin(theta);
+    circle_x_point{i} = zeros(1, circ_points);
+    circle_y_point{i} = zeros(1, circ_points);
 end 
-    
+ 
+k=0 %initialize loop variable
+
     %Random Walk
     for i = 2 :tsteps
 	    % particle random step and position change 
@@ -142,7 +150,7 @@ end
     
         %checks if particle is at any target
 	    for k = 1:num_discs       
-                if any(abs(xbound - circle_x{k}) <= step_size/4 & abs(ybound - circle_y{k}) <= step_size/4)
+                if any(abs(xbound - circle_x_point{k}) <= step_size/4 & abs(ybound - circle_y_point{k}) <= step_size/4)
                     hit_counter(k) = hit_counter(k) + 1; % Increment hit counter for the target
                     fprintf('Random walk has hit target %d!\n', k);
                     %fprintf('Hit counter: %d\n', hit_counter(k));
@@ -181,7 +189,7 @@ hit_counter = table2array(data(:, 2));
 
 % Plot the histogram
 histogram(hit_counter, 'BinWidth', 1);  %'BinWidth', 1, 'Normalization', 'probability'
-xlabel('Steps to Hit', 'FontSize', 12);
-ylabel('count', 'FontSize', 12);
+xlabel('Steps to Hit', 'FontSize', 14);
+ylabel('count', 'FontSize', 14);
 title(['Histogram of Steps to Hit (' , num2str(num_discs), 'discs and ' num2str(target), ' target radius)']);
 %xlim([0, 550])
