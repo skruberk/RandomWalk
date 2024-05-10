@@ -2,6 +2,11 @@
 %simulate a 2D random walk of the filament tip on surface 
 % the walk is effectively diffusing point tied by an effective elastic spring to the center 
 %elastic spring part not yet modeled 
+%this is an older version where:
+%the calculation for whether the random walk reaches the target is performed by iterating through each 
+%target and checking if the walker is closeby. a newer version checks the position of the walker and 
+%then iterates through the origins of each target to see if its close by and then checks the coordinates,
+%which should be much more efficient. 
  
 clc;    % Clear the command window.
 clearvars;
