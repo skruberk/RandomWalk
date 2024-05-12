@@ -6,7 +6,7 @@
 
 %runs the code a number of times and generates a histogram 
 
-% the walk is effectively a diffusing point tied by an effective elastic spring to the center 
+% the walk is effectively a diffusing point tied by an elastic spring to the center 
 %elastic spring part not yet modeled 
 
 clc;    % Clear the command window.
@@ -47,8 +47,6 @@ circ_points = 10;  % Number of points per circle
 spacing = 2 * pi / circ_points;  % Spacing between points
 
 % Calculate coordinates for points within the circle
-radius_points = target * sqrt(rand(1, circ_points)); % Random radius values
-angle_points = linspace(0, 2*pi, circ_points); % Angles for equally spaced points
 theta = linspace(0, 2*pi, 100); % Angles from 0 to 2*pi
 % Initialize arrays to store x and y coordinates
 circle_x = zeros(1, circ_points);
