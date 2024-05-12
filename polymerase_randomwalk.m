@@ -1,5 +1,9 @@
 % a random walk in 2D with reflective boundaries and multiple targets to
 %simulate a 2D random walk of the filament tip on surface 
+%to detect a target the code generates a number of point within each circle and then 
+%checks euclidean distance from the walker to each point. it runs <1% slower than code
+%that checks the position of the walker vs each circle perimeter
+
 % the walk is effectively diffusing point tied by an effective elastic spring to the center 
 %elastic spring part not yet modeled 
  
