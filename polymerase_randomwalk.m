@@ -4,6 +4,8 @@
 %checks euclidean distance from the walker to each point. it runs <1% slower than code
 %that checks the position of the walker vs each circle perimeter
 
+%code runs once and generates a plot of the walk 
+
 % the walk is effectively diffusing point tied by an effective elastic spring to the center 
 %elastic spring part not yet modeled 
  
