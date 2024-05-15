@@ -1,11 +1,12 @@
 % a random walk in 2D with reflective boundaries and multiple targets to
 %simulate a 2D random walk of the filament tip on surface 
-
+%runs the code a number of times and generates a histogram 
 %to detect a target, the code generates a number of points within each circle and then 
 %checks euclidean distance from the walker to each point. it runs <1% slower than code
 %that checks the position of the walker vs each circle perimeter
-
-%runs the code a number of times and generates a histogram 
+%problem: hit_counter(k) is unexpectedly large compared to the total number of steps taken
+%some steps_to_hit values are negative, which shouldn't be possible
+%each hit might not correspond to a single step, problem is mostly fixed by taking absolute value  
 
 % the walk is effectively a diffusing point tied by an effective elastic spring to the center 
 %elastic spring part not yet modeled 
@@ -19,11 +20,11 @@ workspace;  % Make sure the workspace panel is showing.
 % Define parameters here
 radius = 20;    % filament movement radius variable
 num_discs = 6;  % Number of discs or binding points 
-target = radius / 40;   % Membrane disc variable size
-%target = round(target,1)
+target = radius / 20;   % Membrane disc variable size
+target = round(target,1)
 tsteps=10000;  % number of time steps in random walk
 %Repeat random walk%%%%% 
-num_runs = 100;%how many times to run code
+num_runs = 1000;%how many times to run code
 
 % create a grid for cell
 [X, Y] = meshgrid(linspace(-radius, radius, 1000), linspace(-radius, radius, 1000));
@@ -119,11 +120,8 @@ num_points= 1000; % getting all points for walk
 step_size = 1;  % step size for grid
 theta = linspace(0, 2*pi, num_points); % angle range for points 
 counter = 0; %initialize step counter 
-%results = zeros(1, tsteps);  % array for counter results
-hit_counter = zeros(1, num_discs); % Initialize hit counter for each target
- 
-
-%results = zeros(1, num_runs);  % array for counter results
+limit=tsteps*5
+hit_counter = zeros(1, limit); % Initialize hit counter for each target
 
 % Initialize arrays to hold the x and y positions
 x = zeros(tsteps, 1);
@@ -160,7 +158,8 @@ for run = 1:num_runs
                 hit_counter(k) = hit_counter(k) + 1; % Increment hit counter for the target
                 fprintf('Random walk has hit target %d!\n', k);
                 % Calculate the number of steps to hit the target
-                steps_to_hit = step - sum(hit_counter(1:k-1));
+                %steps_to_hit = step - sum(hit_counter(1:k-1));
+                steps_to_hit = abs(step - sum(hit_counter(1:k-1)));
                 % Write data to the CSV file
                 fprintf(fileID, '%d,%d,%d\n', k, hit_counter(k), steps_to_hit);
                 x(step) = xbound; % update pos
@@ -190,11 +189,19 @@ opts.VariableNamesLine = 1; % Assuming the headers are in the first line
 opts.VariableNamingRule = 'preserve'; % Preserve original column headers
 data = readtable(filename, opts);
 % Extract the steps to hit from the data and convert to array
-hit_counter = table2array(data(:, 2));
+steps_to_hit = table2array(data(:, 3));
 
 % Plot the histogram
-histogram(hit_counter, 'BinWidth', 1);  %'BinWidth', 1, 'Normalization', 'probability'
+histogram(steps_to_hit, 'BinWidth', 1);  %'BinWidth', 1, 'Normalization', 'probability'
 xlabel('Steps to Hit', 'FontSize', 14);
 ylabel('count', 'FontSize', 14);
 title(['Histogram of Steps to Hit (' , num2str(num_discs), 'discs and ' num2str(target), ' target radius)']);
-xlim([0, 150])
+xlim([0, 350])
+% Retrieve the current y-axis tick values
+%yTicks = get(gca, 'YTick');
+
+% Convert the tick values to strings without scientific notation
+%yTickLabels = arrayfun(@(x) sprintf('%d', x), yTicks, 'UniformOutput', false);
+
+% Apply the new tick labels to the y-axis
+%set(gca, 'YTickLabel', yTickLabels);
