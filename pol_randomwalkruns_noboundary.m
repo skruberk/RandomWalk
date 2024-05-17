@@ -17,12 +17,12 @@ workspace;  % Make sure the workspace panel is showing.
 
 % Define parameters here
 radius = 20;    % filament movement radius variable
-num_discs = 3;  % Number of discs or binding points 
-target = radius / 8;   % Membrane disc variable size
+num_discs = 40;  % Number of discs or binding points 
+target = radius / 20;   % Membrane disc variable size
 target = round(target,1);
 tsteps=1000;  % number of time steps in random walk
 %Repeat random walk%%%%% 
-num_runs = 10000;%how many times to run code
+num_runs = 1000;%how many times to run code
 
 %%filehandling%%%%%%%%%%%%%%%%%
 filename = sprintf('refltarget_nobound_%d_%d_%d_%d.csv', num_discs, target, tsteps,num_runs);
@@ -123,7 +123,6 @@ for run = 1:num_runs
     xbound = x(step - 1) + delx * delta;    % new position 
     dely = 2 * (randi(2) - 1) - 1;
     ybound = y(step - 1) + dely * delta;
-
          % Check if the particle is at any target
         for k = 1:num_discs       
             if any(abs(xbound - circle_x{k}) <= step_size/10 & abs(ybound - circle_y{k}) <= step_size/10)
@@ -139,7 +138,11 @@ for run = 1:num_runs
                 break;
             elseif norm([xbound,ybound]) >= radius %is it beyond the boundary?
                 x(step) = min(max(xbound, -radius), radius);
+                %x(step) = x(step) + rand() * 2 * delta - delta;
+                %x(step)=-x(step-1);    
                 y(step) = min(max(ybound, -radius), radius);
+                %y(step) = y(step) + rand() * 2 * delta - delta;
+                %y(step)=-y(step-1);
             else   %it's walking without hitting a target
                 x(step) = xbound; % update pos
                 y(step) = ybound;
