@@ -13,16 +13,14 @@ clearvars;
 close all;  % Close all figs
 workspace;  % Make sure the workspace panel is showing.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
 % Define parameters here
 radius = 20;    % filament movement radius variable
 num_discs = 10;  % Number of discs or binding points 
-target = radius / 8;   % Membrane disc variable size
+target = radius / 20;   % Membrane disc variable size
 target = round(target,1);
 tsteps=1000;  % number of time steps in random walk
 %Repeat random walk%%%%% 
 num_runs = 3;%how many times to run code
-
 
 % create a grid for cell
 [X, Y] = meshgrid(linspace(-radius, radius, 1000), linspace(-radius, radius, 1000));
@@ -47,7 +45,7 @@ spacing = 2 * pi / circ_points;  % Spacing between points
 % Calculate coordinates for points within the circle
 radius_points = target * sqrt(rand(1, circ_points)); % Random radius values
 angle_points = linspace(0, 2*pi, circ_points); % Angles for equally spaced points
-
+%disc_space = 1.05;
 % place all circles 
 for i = 1:num_discs   
     % Calculate grid row and column
@@ -145,7 +143,9 @@ for run = 1:num_runs
                 break;
             elseif norm([xbound,ybound]) >= radius %is it beyond the boundary?
                 x(step) = min(max(xbound, -radius), radius);
+                x(step)=x(step-2);
                 y(step) = min(max(ybound, -radius), radius);
+                y(step)=y(step-2);
             else   %it's walking without hitting a target
                 x(step) = xbound; % update pos
                 y(step) = ybound;
