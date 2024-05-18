@@ -1,6 +1,7 @@
 % a random walk in 2D with reflective boundaries and multiple targets to
-%simulate a 2D random walk of the filament tip on surface 
-%each of the targets performs a restricted random walk and is tied to their
+%simulate a 2D random walk of the filament tip on surface
+%walker explores a circular region on a grid
+%each of the targets also performs a restricted random walk and is tied to their
 %origin using a variable spring constant 
 %determines whether something has hit a target by checking distance vs
 %circle perimeter and then sending the walker back to a random point after a
@@ -15,20 +16,20 @@ workspace;  % Make sure the workspace panel is showing.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Define parameters here
 radius = 20;    % filament movement radius variable
-num_discs = 10;  % Number of discs or binding points 
+num_discs = 4;  % Number of discs or binding points 
 target = radius / 20;   % Membrane disc variable size
 target = round(target,1);
 tsteps=1000;  % number of time steps in random walk
 %Repeat random walk%%%%% 
-num_runs = 3;%how many times to run code
+num_runs = 100;%how many times to run code
 
 % create a grid for cell
 [X, Y] = meshgrid(linspace(-radius, radius, 1000), linspace(-radius, radius, 1000));
 mask = (X.^2 + Y.^2 <= radius^2);
 
 % plot the grid
-%pos_outer = [-radius, -radius, 2*radius, 2*radius]; 
-%rectangle('Position', pos_outer, 'Curvature', [1 1], 'LineWidth', 1);
+pos_outer = [-radius, -radius, 2*radius, 2*radius]; 
+rectangle('Position', pos_outer, 'Curvature', [1 1], 'LineWidth', 1);
 axis square;
 hold on;
 
@@ -42,10 +43,9 @@ circle_coord = zeros(num_discs, 2);  % stores all the coordinates
 circ_points = 50;  % Number of points per circle
 spacing = 2 * pi / circ_points;  % Spacing between points
 
-% Calculate coordinates for points within the circle
+% Calculate coordinates for points on the circle
 radius_points = target * sqrt(rand(1, circ_points)); % Random radius values
 angle_points = linspace(0, 2*pi, circ_points); % Angles for equally spaced points
-%disc_space = 1.05;
 % place all circles 
 for i = 1:num_discs   
     % Calculate grid row and column
@@ -83,7 +83,6 @@ num_points= 1000; % getting all points for walk
 step_size = 1;  % step size for grid
 theta = linspace(0, 2*pi, num_points); % angle range for points 
 counter = 0; %initialize step counter 
-%results = zeros(1, tsteps);  % array for counter results
 hit_counter = zeros(1, num_discs); % Initialize hit counter for each target
  
 % Initialize arrays to hold the x and y positions
