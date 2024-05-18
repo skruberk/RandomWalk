@@ -1,5 +1,6 @@
 % a random walk in 2D with reflective boundaries and multiple targets to
 %simulate a 2D random walk of the filament tip on surface
+%walker explores a circular region on a grid
 %each of the targets performs a restricted random walk and is tied to their
 %origin using a variable spring constant 
 %determines whether something has hit a target by checking distance vs
@@ -20,7 +21,7 @@ target = radius / 20;   % Membrane disc variable size
 target = round(target,1);
 tsteps=1000;  % number of time steps in random walk
 %Repeat random walk%%%%% 
-num_runs = 1000;%how many times to run code
+num_runs = 10000;%how many times to run code
 
 %%filehandling%%%%%%%%%%%%%%%%%
 filename = sprintf('steps2hit_refltarget_%d_%d_%d_%d.csv', num_discs, target, tsteps,num_runs);
@@ -98,15 +99,14 @@ num_points= 1000; % getting all points for walk
 step_size = 1;  % step size for grid
 theta = linspace(0, 2*pi, num_points); % angle range for points 
 counter = 0; %initialize step counter 
-%results = zeros(1, tsteps);  % array for counter results
 hit_counter = zeros(1, num_discs); % Initialize hit counter for each target
  
 % Initialize arrays to hold the x and y positions
 x = zeros(tsteps, 1);
 y = zeros(tsteps, 1);
 
-circle_x = cell(num_discs, 1);  % Initialize as cell array
-circle_y = cell(num_discs, 1);  % Initialize as cell array
+circle_x = cell(num_discs, 1);  % initialize
+circle_y = cell(num_discs, 1);  
 for i = 1:num_discs
     % Calculate coordinates for each circle
     circle_x{i} = org_coord(i, 1) + target * cos(theta);
@@ -135,21 +135,20 @@ for run = 1:num_runs
         xbound = x(step - 1) + delx * delta;    % New position 
         dely = 2 * (randi(2) - 1) - 1;
         ybound = y(step - 1) + dely * delta;
-        % Apply spring forces to target positions
+        % add spring forces to target positions
         for k = 1:num_discs
             spring_force_x = spring_constant * (org_coord(k, 1) - target_x(k));
             spring_force_y = spring_constant * (org_coord(k, 2) - target_y(k));
             target_x(k) = target_x(k) + spring_force_x;
             target_y(k) = target_y(k) + spring_force_y;
-
-            % Perform limited random walk for each target
-            target_x(k) = target_x(k) + randn() * 0.5;  % spring target constant 0.1-0.5 works 
-            target_y(k) = target_y(k) + randn() * 0.5;
-            %collision check 
+            %limited random walk for each target
+            target_x(k) = target_x(k) + randn() * 0.1;  % spring target constant 0.1-0.5 works 
+            target_y(k) = target_y(k) + randn() * 0.1;
+            %collision check, euclidean distance 
             if sqrt((xbound - target_x(k))^2 + (ybound - target_y(k))^2) <= target
                 hit_counter(k) = hit_counter(k) + 1; % Increment hit counter for the target
                 fprintf('Random walk has hit target %d!\n', k)
-                % Calculate the number of steps to hit the target
+                % number of steps to hit the target
                 steps_to_hit = step - sum(hit_counter(1:k-1));
                 % Write data to the CSV file
                 fprintf(fileID, '%d,%d,%d\n', k, hit_counter(k), steps_to_hit);
@@ -158,8 +157,10 @@ for run = 1:num_runs
                 y(step) = rand() * (2 * radius) - radius;
                 break;
             elseif norm([xbound,ybound]) >= radius %is it beyond the boundary?
-                x(step) = min(max(xbound, -radius), radius);
+                x(step) = min(max(xbound, -radius), radius); %reflect over boundary
+                x(step)=x(step-2); %step back
                 y(step) = min(max(ybound, -radius), radius);
+                y(step)=y(step-2);
             else   %it's walking without hitting a target
                 x(step) = xbound; % update pos
                 y(step) = ybound;
@@ -188,7 +189,7 @@ title(['Histogram of Steps to Hit (' , num2str(num_discs), 'discs and ' num2str(
 %xlim([0, 10000])
 % Retrieve the current y-axis tick values
 %yTicks = get(gca, 'YTick');
-% Convert the tick values to strings without scientific notation
+%tick values to strings without scientific notation
 %yTickLabels = arrayfun(@(x) sprintf('%d', x), yTicks, 'UniformOutput', false);
 % Apply the new tick labels to the y-axis
 %set(gca, 'YTickLabel', yTickLabels);
