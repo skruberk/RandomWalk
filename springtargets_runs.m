@@ -1,5 +1,5 @@
-% a random walk in 2D with reflective boundaries and multiple targets to
-%simulate a 2D random walk of the filament tip on surface
+% a 2D random walk with reflective boundaries and multiple targets to
+% simulate the interaction of an actin filament tip on a surface
 %walker explores a circular region on a grid
 %each of the targets performs a restricted random walk and is tied to their
 %origin using a variable spring constant 
@@ -16,13 +16,13 @@ workspace;  % Make sure the workspace panel is showing.
 
 % Define parameters here
 radius = 20;    % filament movement radius variable
-num_discs = 10;  % Number of discs or binding points 
+num_discs = 30;  % Number of discs or binding points 
 target = radius / 20;   % Membrane disc variable size
 target = round(target,1);
 tsteps=1000;  % number of time steps in random walk
 %Repeat random walk%%%%% 
 num_runs = 10000;%how many times to run code
-
+spring_target = 0.5 % 0.1 - 0.5 works 
 %%filehandling%%%%%%%%%%%%%%%%%
 filename = sprintf('steps2hit_springtarget_%d_%d_%d_%d_%d.csv', num_discs, target, tsteps,num_runs,spring_target);
 % Open a file for writing
@@ -71,13 +71,10 @@ for i = 1:num_discs
     org_coord(i, :) = [center_x, center_y];
     
     % Plot the discs inside the loop
-    disc_draw = ((X - center_x).^2 + (Y - center_y).^2 <= target^2);
+    disc_draw = mask & ((X - center_x).^2 + (Y - center_y).^2 <= target^2);
     contour(X, Y, disc_draw, [0.5 0.5], 'r', 'LineWidth', 1);
+    %disc_draw = ((X - center_x).^2 + (Y - center_y).^2 <= target^2);
 end
-
-    % plot the disc clipped by the larger circle mask
-    %disc_masked = mask & ((X - center_x).^2 + (Y - center_y).^2 <= target^2);
-    %contour(X, Y, disc_masked, [0.5 0.5], 'r', 'LineWidth', 1);
 
 % restore warning state
 warning('on', 'MATLAB:contour:ConstantData');
@@ -114,7 +111,7 @@ for i = 1:num_discs
 end 
 % open the file again for appending data%%%%%%%%%%%%%%%%%%%%
 fileID = fopen(filename, 'a');
-spring_target = 0.1 % 0.1 - 0.5 works 
+
 spring_constant = 0.1;  
 target_x = zeros(num_discs, 1);
 target_y = zeros(num_discs, 1);
@@ -144,6 +141,13 @@ for run = 1:num_runs
             %limited random walk for each target
             target_x(k) = target_x(k) + randn() * spring_target;  % spring target constant 0.1-0.5 works 
             target_y(k) = target_y(k) + randn() * spring_target;
+            % make targets stay within the larger circle NEW CHANGED 
+            if sqrt(target_x(k)^2 + target_y(k)^2) > radius
+                % Adjust position to be on the circle boundary
+                angle = atan2(target_y(k), target_x(k));
+                target_x(k) = radius * cos(angle);
+                target_y(k) = radius * sin(angle);
+            end
             %collision check, euclidean distance 
             if sqrt((xbound - target_x(k))^2 + (ybound - target_y(k))^2) <= target
                 hit_counter(k) = hit_counter(k) + 1; % Increment hit counter for the target
