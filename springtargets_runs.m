@@ -16,7 +16,7 @@ workspace;  % Make sure the workspace panel is showing.
 
 % Define parameters here
 radius = 20;    % filament movement radius variable
-num_discs = 30;  % Number of discs or binding points 
+num_discs = 15;  % Number of discs or binding points 
 target = radius / 20;   % Membrane disc variable size
 target = round(target,1);
 tsteps=1000;  % number of time steps in random walk
@@ -49,13 +49,9 @@ mask = (X.^2 + Y.^2 <= radius^2);
 % warnings for constant Z data
 warning('off', 'MATLAB:contour:ConstantData');
 
-org_coord = zeros(num_discs, 2); % stores all the origins 
-circle_coord = zeros(num_discs, 2);  % stores all the coordinates 
 % calculate coordinates for red circles
+org_coord = zeros(num_discs, 2); % stores all the origins 
 circ_points = 50;  % Number of points per circle
-spacing = 2 * pi / circ_points;  % Spacing between points
-
-% Calculate coordinates for points within the circle
 radius_points = target * sqrt(rand(1, circ_points)); % Random radius values
 angle_points = linspace(0, 2*pi, circ_points); % Angles for equally spaced points
     % calculate disc centers
@@ -66,16 +62,13 @@ for i = 1:num_discs
     % Calculate center coordinates of the current disc
     center_x = -radius + col * radius * 2 / (sqrt(num_discs) + 1);
     center_y = -radius + row * radius * 2 / (sqrt(num_discs) + 1);
-    
     % Store the origin coordinates
     org_coord(i, :) = [center_x, center_y];
-    
     % Plot the discs inside the loop
     disc_draw = mask & ((X - center_x).^2 + (Y - center_y).^2 <= target^2);
     contour(X, Y, disc_draw, [0.5 0.5], 'r', 'LineWidth', 1);
     %disc_draw = ((X - center_x).^2 + (Y - center_y).^2 <= target^2);
 end
-
 % restore warning state
 warning('on', 'MATLAB:contour:ConstantData');
 
@@ -126,13 +119,15 @@ for run = 1:num_runs
         target_y(k) = org_coord(k, 2);
     end
 % Random Walk
+%hit_flag=false; %tracks for 0 hits 
     for step = 2:tsteps
         % Particle random step and position change 
         delx = 2 * (randi(2) - 1) - 1;   % Random step 
         xbound = x(step - 1) + delx * delta;    % New position 
         dely = 2 * (randi(2) - 1) - 1;
         ybound = y(step - 1) + dely * delta;
-        % add spring forces to target positions
+        % add spring forces to target positions, hooke's law, original
+        % coordinates-new coordinates 
         for k = 1:num_discs
             spring_force_x = spring_constant * (org_coord(k, 1) - target_x(k));
             spring_force_y = spring_constant * (org_coord(k, 2) - target_y(k));
