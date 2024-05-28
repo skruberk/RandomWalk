@@ -3,9 +3,10 @@ clearvars;
 close all;  % Close all figs
 
 % import from csv
-filename = 'steps2hit_springtarget_30_1_1000_10000_5.000000e-01.csv';
+filename = 'steps2hit_springtarget_20_1_1000_10000_1.000000e-01.csv';
 dataTable = readtable(filename, 'VariableNamingRule', 'preserve'); 
 printFile = strrep(filename, '_', ' ');
+
 % Read the column of CSV file
 data = dataTable{:, 3};
 
@@ -56,13 +57,14 @@ options = statset('Display', 'off', 'TolFun', 1e-6, 'TolX', 1e-6);
 %fit values
 fittedYData = expModel(beta, xData);
 
+
 %error check for Inf or NaN values in the fitted curve
 if any(~isfinite(fittedYData))
     disp('contains Inf or NaN values.');
 end
 % define point range for slopes 
-xRange2 = [100, 1000];  % data range for slope
-xRange1 = [0, 100];
+xRange2 = [200, 1000];  % data range for slope
+xRange1 = [30, 200];
 % fit values 
 fittedValuesAtEndpoints1 = expModel(beta, xRange1);
 disp('Fitted values at endpoint1:');
@@ -75,6 +77,21 @@ slope1 = (fittedValuesAtEndpoints1(2) - fittedValuesAtEndpoints1(1)) / (xRange1(
 slope2 =(fittedValuesAtEndpoints2(2) - fittedValuesAtEndpoints2(1)) / (xRange2(2) - xRange2(1));
 disp(['Slope: ', num2str(slope1)]);
 disp(['Slope: ', num2str(slope2)]);
+%derivative
+expDx = @(b, x) b(1) * b(2) * exp(b(2) * x) + b(3) * b(4) * exp(b(4) * x);
+%xEval= [50, 500]; %evaluate at those points
+%Dx = expDx(beta, xEval);
+% Dx xRange1
+xValues1 = linspace(xRange1(1), xRange1(2), 100);
+dxValues1 = expDx(beta, xValues1);
+% Dx xRange2
+xValues2 = linspace(xRange2(1), xRange2(2), 100);
+dxValues2 = expDx(beta, xValues2);
+% ave Dx xRange1
+aveDx1 = mean(dxValues1);
+% ave Dx xRange2
+aveDx2 = mean(dxValues2);
+
 % plot histogram and fitted curve
 figure;
 bar(binCenters, binCounts, 'FaceColor', [0.8, 0.8, 0.8], 'EdgeColor', 'none');
@@ -90,7 +107,30 @@ text(mean(xRange1), mean(fittedValuesAtEndpoints1), sprintf('Slope: %.4f', slope
     'VerticalAlignment', 'bottom', 'HorizontalAlignment', 'left', 'Color', 'blue');
 text(mean(xRange2), mean(fittedValuesAtEndpoints2), sprintf('Slope: %.4f', slope2), ...
     'VerticalAlignment', 'bottom', 'HorizontalAlignment', 'right', 'Color', 'blue');
+%text(sprintf('Dx: %.4f', Dx), ...
+  %  'VerticalAlignment', 'top', 'HorizontalAlignment', 'right', 'Color', 'red');
 hold off;
 % print fit parameters, print to plot? 
 disp('Fitted Parameters:');
 disp(beta);
+disp('dDx:');
+disp(aveDx1);
+disp(aveDx2);
+
+%%filehandling%%%%%%%%%%%%%%%%%
+
+% Open a file for writing
+fileID = fopen('OutputSlope.csv', 'a');%w for write a for append   
+% Check if the file is empty
+fileEmpty = fseek(fileID, 0, 'eof') == 0;
+% Write headers only if the file is empty
+fileInfo = dir('OutputSlope.csv');
+if fileInfo.bytes == 0
+    fprintf(fileID, 'filename,slope1,slope2,beta\n');
+end
+
+%fileID = fopen(filename, 'a');
+% Write data to the CSV file
+
+fprintf(fileID, '%s,%.4f,%.4f,%s\n', printFile, slope1, slope2, num2str(beta, '%.4f '));
+fclose(fileID);
