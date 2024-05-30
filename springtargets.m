@@ -16,7 +16,7 @@ workspace;  % Make sure the workspace panel is showing.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Define parameters here
 radius = 20;    % filament movement radius variable
-num_discs = 30;  % Number of discs or binding points 
+num_discs = 1;  % Number of discs or binding points 
 target = radius / 20;   % Membrane disc variable size
 target = round(target,1);
 tsteps=1000;  % number of time steps in random walk
@@ -38,7 +38,7 @@ hold on;
 warning('off', 'MATLAB:contour:ConstantData');
 
 org_coord = zeros(num_discs, 2); % stores all the origins 
-circle_coord = zeros(num_discs, 2);  % stores all the coordinates 
+%circle_coord = zeros(num_discs, 2);  % stores all the coordinates 
 % calculate coordinates for red circles
 circ_points = 50;  % Number of points per circle
 spacing = 2 * pi / circ_points;  % Spacing between points
@@ -59,11 +59,9 @@ for i = 1:num_discs
     org_coord(i, :) = [center_x, center_y];
     
     % plot the discs inside the loop THIS CHANGED 
-    
     disc_draw = mask & ((X - center_x).^2 + (Y - center_y).^2 <= target^2);
     contour(X, Y, disc_draw, [0.5 0.5], 'r', 'LineWidth', 1);
     %disc_draw = ((X - center_x).^2 + (Y - center_y).^2 <= target^2);
-    %contour(X, Y, disc_draw, [0.5 0.5], 'r', 'LineWidth', 1);
 end
 
 % restore warning state
@@ -128,10 +126,10 @@ for run = 1:num_runs
             spring_force_y = spring_constant * (org_coord(k, 2) - target_y(k));
             target_x(k) = target_x(k) + spring_force_x;
             target_y(k) = target_y(k) + spring_force_y;
-            % Perform random walk for each target
-            target_x(k) = target_x(k) + randn() * 0.5;  % target walk step size 0.1-0.5 works well
-            target_y(k) = target_y(k) + randn() * 0.5;
-            % Ensure targets stay within the larger circle NEW CHANGED 
+            % random walk for each target
+            target_x(k) = target_x(k) + randn() * 1.5;  % target walk step size 0.1-0.5 works well
+            target_y(k) = target_y(k) + randn() * 1.5;
+            % make targets stay within the larger circle  
             if sqrt(target_x(k)^2 + target_y(k)^2) > radius
                 % Adjust position to be on the circle boundary
                 angle = atan2(target_y(k), target_x(k));
@@ -150,17 +148,35 @@ for run = 1:num_runs
                 x(step) = rand() * (2 * radius) - radius;
                 y(step) = rand() * (2 * radius) - radius;
                 break;
-            elseif norm([xbound,ybound]) >= radius %is it beyond the boundary?
-                x(step) = min(max(xbound, -radius), radius);
-                x(step)=x(step-2);
-                y(step) = min(max(ybound, -radius), radius);
-                y(step)=y(step-2);
+            elseif norm([xbound,ybound]) >= radius %is it beyond the boundary?     
+                % If the walker is outside and xbound is positive and
+                % ybound is positive etc
+                % Reflect the walker by wrapping around to the other side
+                    if xbound > 0 && ybound > 0
+                        x(step) = (-abs(xbound))+2; % wrap to left
+                        y(step) = (-abs(ybound))+2; % wrap to bottom  
+                    elseif xbound < 0 && ybound > 0
+                        x(step) = (abs(xbound))-2; % wrap to the right 
+                        y(step) = (-abs(ybound))+2;% wrap to bottom 
+                    elseif xbound > 0 && ybound < 0
+                        x(step) = (-abs(xbound))+2; % wrap to left
+                        y(step) = (abs(ybound))-2; % wrap to top 
+                    elseif xbound < 0 && ybound < 0
+                        x(step) =  (abs(xbound))-2; % wrap to the right 
+                        y(step) =  (abs(ybound))-2; % wrap to top 
+                    end
+                     
+                %norm([xbound,ybound]) >= radius %is it beyond the boundary?
+                %x(step) = min(max(xbound, -radius), radius);
+                %x(step)=x(step-10);
+                %y(step) = min(max(ybound, -radius), radius);
+                %y(step)=y(step-10);
             else   %it's walking without hitting a target
                 x(step) = xbound; % update pos
-                y(step) = ybound;
-                counter = counter + 1 % update step counter 
+                y(step) = ybound;    
             end
         end
+        counter = counter + 1 % update step counter 
     end
 % Plot the walker's final positions
     plot(x, y,'Color', color_palette(run,:), 'LineWidth', 1.5);
@@ -168,7 +184,7 @@ for run = 1:num_runs
     % Plot the updated positions of the discs
     for k = 1:num_discs
         disc_draw = ((X - target_x(k)).^2 + (Y - target_y(k)).^2 <= target^2);
-        contour(X, Y, disc_draw, [0.5 0.5], 'g', 'LineWidth', 1); % Use a different color to distinguish from initial positions
+        contour(X, Y, disc_draw, [0.5 0.5], 'k', 'LineWidth', 1); % Use a different color to distinguish from initial positions
     end
 end
 xlabel('X Position');
@@ -177,6 +193,5 @@ title('Random Walk');
 axis equal; % set equal aspect ratio
 grid on;
 hold on;
-
 
         
