@@ -1,4 +1,4 @@
-% a 2D random walk with reflective boundaries and multiple targets to
+% a 2D random walk with wrapped boundaries and multiple targets to
 % simulate the interaction of an actin filament tip on a surface
 %walker explores a circular region on a grid
 %each of the targets performs a restricted random walk and is tied to their
@@ -6,7 +6,7 @@
 %determines whether something has hit a target by checking distance vs
 %circle perimeter and then sending the walker back to a random point after a
 %hit
-%0 is now recorded in steps to hit (first passage time) 
+%boundary now wraps around to the other side 
 %runs the code a number of times and generates a histogram 
 
 clc;    % Clear the command window.
@@ -17,22 +17,22 @@ workspace;  % Make sure the workspace panel is showing.
 
 % Define parameters here
 radius = 20;    % filament movement radius variable
-num_discs = 20;  % Number of discs or binding points 
-target = radius / 20;   % Membrane disc variable size
+num_discs = 30;  % Number of discs or binding points 
+target = radius / 40;   % Membrane disc variable size
 target = round(target,1);
-tsteps=1000;  % number of time steps in random walk
+tsteps=10000;  % number of time steps in random walk
 %Repeat random walk%%%%% 
 num_runs = 1000;%how many times to run code
-spring_target = 1  % 0.1 - 0.5 works 
+spring_target = 1 ; % 0.1 - 0.5 works 
 %%filehandling%%%%%%%%%%%%%%%%%
-filename = sprintf('steps2hit_springtarget_%d_%d_%d_%d_%d.csv', num_discs, target, tsteps,num_runs,spring_target);
+filename = sprintf('hits_boundarywrap_%d_%d_%d_%d_%d.csv', num_discs, target, tsteps,num_runs,spring_target);
 % Open a file for writing
 fileID = fopen(filename, 'a');   %w for write a for append
 % Check if the file is empty
 fileEmpty = fseek(fileID, 0, 'eof') == 0;
 % Write headers only if the file is empty
 if fileEmpty
-    fprintf(fileID, 'Target,Hit Counter,Steps to Hit\n'); % Write headers
+    fprintf(fileID, 'Target,hit step, Steps to Hit\n'); % Write headers ,Hit Counter
 end
 fclose(fileID);
 
@@ -90,7 +90,7 @@ num_points= 1000; % getting all points for walk
 step_size = 1;  % step size for grid
 theta = linspace(0, 2*pi, num_points); % angle range for points 
 counter = 0; %initialize step counter 
-hit_counter = zeros(1, num_discs); % Initialize hit counter for each target
+%hit_counter = zeros(1, num_discs); % Initialize hit counter for each target
  
 % Initialize arrays to hold the x and y positions
 x = zeros(tsteps, 1);
@@ -106,7 +106,7 @@ end
 spring_constant = 0.1;  
 target_x = zeros(num_discs, 1);
 target_y = zeros(num_discs, 1);
-
+total_hits = zeros(num_runs, tsteps);  % 2D array t
 % open the file again for appending data%%%%%%%%%%%%%%%%%%%%
 fileID = fopen(filename, 'a');
 
@@ -114,15 +114,16 @@ for run = 1:num_runs
     % Reset each run 
     x(1) = 0.0;
     y(1) = 0.0;
-    hit_counter(:) = 0;
+    
     % Initialize target positions, targets move
     for k = 1:num_discs
         target_x(k) = org_coord(k, 1);
         target_y(k) = org_coord(k, 2);
     end
 % Random Walk 
+    hit_step = 0;  %steps taken since last hit
     for step = 2:tsteps %run the walker for a discrete number of steps 
-        hit_flag=false; %tracks for 0 hits
+        %hit_flag=false; %tracks for 0 hits
         % Particle random step and position change 
         delx = 2 * (randi(2) - 1) - 1;   % Random step 
         xbound = x(step - 1) + delx * delta;    % New position 
@@ -140,41 +141,60 @@ for run = 1:num_runs
             target_y(k) = target_y(k) + randn() * spring_target;
             % make targets stay within the larger circle  
             if sqrt(target_x(k)^2 + target_y(k)^2) > radius
-                % Adjust position to be on the circle boundary
+            % adjust inside circle boundary
                 angle = atan2(target_y(k), target_x(k));
-                target_x(k) = radius * cos(angle);
-                target_y(k) = radius * sin(angle);
+                distance = sqrt(target_x(k)^2 + target_y(k)^2);
+                scaling_factor = radius / distance * rand() * 0.9; % random btw 0 - 0.9
+                target_x(k) = target_x(k) * scaling_factor;
+                target_y(k) = target_y(k) * scaling_factor;
             end
             %collision check, euclidean distance 
             if sqrt((xbound - target_x(k))^2 + (ybound - target_y(k))^2) <= target
-                hit_counter(k) = hit_counter(k) + 1; % Increment hit counter for the target
-                fprintf('Random walk has hit target %d!\n', k)
-                hit_flag==true
                 % number of steps to hit the target
-                steps_to_hit = step - sum(hit_counter(1:k-1));
+                steps_to_hit = step - hit_step; 
+                hit_step = step;  % Update the last hit step
+                fprintf('Random walk has hit target %d!\n', k) 
+                %hit_flag==true
                 % Write data to the CSV file
-                fprintf(fileID, '%d,%d,%d\n', k, hit_counter(k), steps_to_hit);
+                fprintf(fileID, '%d,%d,%d\n', k, hit_step, steps_to_hit); %hit_counter(k)
+                %hit_counter=0;
                 % return walker to a random point 
                 x(step) = rand() * (2 * radius) - radius;
                 y(step) = rand() * (2 * radius) - radius;
-                break;
-            elseif norm([xbound,ybound]) >= radius %is it beyond the boundary?
-                x(step) = min(max(xbound, -radius), radius); %reflect over boundary
-                x(step)=x(step-2); %step back
-                y(step) = min(max(ybound, -radius), radius);
-                y(step)=y(step-2);
+                break; 
+            elseif norm([xbound,ybound]) >= radius %is it beyond the boundary?    
+                % If the walker is outside and xbound is positive and
+                % ybound is positive etc
+                if xbound > 0 && ybound > 0
+                        x(step) = (-abs(xbound))+2; % wrap to left
+                        y(step) = (-abs(ybound))+2; % wrap to bottom  
+                    elseif xbound < 0 && ybound > 0
+                        x(step) = (abs(xbound))-2; % wrap to the right 
+                        y(step) = (-abs(ybound))+2;% wrap to bottom 
+                    elseif xbound > 0 && ybound < 0
+                        x(step) = (-abs(xbound))+2; % wrap to left
+                        y(step) = (abs(ybound))-2; % wrap to top 
+                    elseif xbound < 0 && ybound < 0
+                        x(step) =  (abs(xbound))-2; % wrap to the right 
+                        y(step) =  (abs(ybound))-2; % wrap to top 
+                    end
+                %norm([xbound,ybound]) >= radius; %is it beyond the boundary?
+                %x(step) = min(max(xbound, -radius), radius); %reflect over boundary
+                %x(step)=x(step-2); %step back
+                %y(step) = min(max(ybound, -radius), radius);
+                %y(step)=y(step-2);
             else   %it's walking without hitting a target
                 x(step) = xbound; % update pos
                 y(step) = ybound;
-                counter = counter + 1 % update step counter 
             end %closes collision check 
         end %closes k=1:num_discs
-        if hit_flag==false; %tracks 0 hits, inside the for tsteps loop but outside the for k = 1:num_discs loop.
-       fprintf(fileID, '%d,%d,%d\n', k, hit_counter(k), 0);  %record 0 hit on the csv
-      else 
+        counter = counter + 1 % update step counter 
+        %if hit_flag==false; %tracks 0 hits, inside the for tsteps loop but outside the for k = 1:num_discs loop.
+        %fprintf(fileID, '%d,%d,%d\n', k, hit_counter(k), 0);  %record 0 hit on the csv
+        %else 
         %break;  % exit the outer loop (for step = 2:tsteps) if a hit was detected
-        continue;  % return to outer loop for step = 2:tsteps, could still be steps left 
-       end %closes hit_flag
+        %continue;  % return to outer loop for step = 2:tsteps, could still be steps left 
+       %end %closes hit_flag
     end  % closes tsteps     
 end %closes run =1:num_runs 
 
@@ -190,7 +210,7 @@ data = readtable(filename, opts);
 steps_to_hit = table2array(data(:, 3));
 
 % Plot the histogram
-histogram(steps_to_hit, 'BinWidth', 1);  %'BinWidth', 1, 'Normalization', 'probability'
+histogram(steps_to_hit, 'BinWidth', 10);  %'BinWidth', 1, 'Normalization', 'probability'
 xlabel('Steps to Hit', 'FontSize', 14);
 ylabel('count', 'FontSize', 14);
 title(['Histogram of Steps to Hit (' , num2str(num_discs), 'discs and ' num2str(target), ' target radius)']);
@@ -202,5 +222,5 @@ title(['Histogram of Steps to Hit (' , num2str(num_discs), 'discs and ' num2str(
 % Apply the new tick labels to the y-axis
 %set(gca, 'YTickLabel', yTickLabels);
 
-%could also plot the number of hits or the distance to the target over time 
+%could also plot the number of hits or the euclidean distance to the target over time 
 
