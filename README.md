@@ -7,7 +7,7 @@ num_discs   : Number of discs or binding points  \
 target   : Membrane disc variable size  \
 tstep  : number of time steps in random walk \ 
 num_runs : how many times to run code  \
-spring_target : controls how much target is tied to the center  
-tau : time increment between steps units of seconds 
-D : diffusion coefficient for the walk units of um^2/sec
-delta : distance increment (in units of um)
+spring_target : controls how much target is tied to the center  \  
+tau : time increment between steps units of seconds  \
+D : diffusion coefficient for the walk units of um^2/sec  \
+delta : distance increment (in units of um)  \
