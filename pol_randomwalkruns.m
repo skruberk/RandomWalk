@@ -1,14 +1,12 @@
 % a random walk in 2D with reflective boundaries and multiple targets to
 %simulate a 2D random walk of the filament tip on surface 
-%runs the code a number of times and generates a histogram 
-%to detect a target, the code generates a number of points within each circle and then 
-%checks euclidean distance from the walker to each point. it runs <1% slower than code
-%that checks the position of the walker vs each circle perimeter
-%problem: hit_counter(k) is unexpectedly large compared to the total number of steps taken
-%some steps_to_hit values are negative, which shouldn't be possible
-%each hit might not correspond to a single step, problem is mostly fixed by taking absolute value  
 
-% the walk is effectively a diffusing point tied by an effective elastic spring to the center 
+%determines whether something has hit a target by checking distance vs
+%circle perimeter
+
+%runs the code a number of times and generates a histogram 
+
+% the walk is effectively a diffusing point tied by an elastic spring to the center 
 %elastic spring part not yet modeled 
 
 clc;    % Clear the command window.
@@ -19,12 +17,12 @@ workspace;  % Make sure the workspace panel is showing.
 
 % Define parameters here
 radius = 20;    % filament movement radius variable
-num_discs = 6;  % Number of discs or binding points 
+num_discs = 20;  % Number of discs or binding points 
 target = radius / 20;   % Membrane disc variable size
 target = round(target,1)
 tsteps=10000;  % number of time steps in random walk
 %Repeat random walk%%%%% 
-num_runs = 1000;%how many times to run code
+num_runs = 100;%how many times to run code
 
 % create a grid for cell
 [X, Y] = meshgrid(linspace(-radius, radius, 1000), linspace(-radius, radius, 1000));
@@ -41,14 +39,18 @@ axis square;
 warning('off', 'MATLAB:contour:ConstantData');
 
 % calculate coordinates for inside red circles
-circ_points = target*(radius*2.5);  % Number of points per circle
+%circ_points = target*(radius*2.5);  % Number of points per circle
 org_coord = zeros(num_discs, 2); % stores all the origins 
 circle_coord = cell(num_discs, 2);  % stores all the coordinates 
-  
-% Calculate coordinates for points within the circle
-radius_points = target * sqrt(rand(1, circ_points)); % Random radius values
-angle_points = linspace(0, 2*pi, circ_points); % Angles for equally spaced points
+% calculate coordinates for red circles
+circ_points = 10;  % Number of points per circle
+spacing = 2 * pi / circ_points;  % Spacing between points
 
+% Calculate coordinates for points within the circle
+theta = linspace(0, 2*pi, 100); % Angles from 0 to 2*pi
+% Initialize arrays to store x and y coordinates
+circle_x = zeros(1, circ_points);
+circle_y = zeros(1, circ_points);
 for i = 1:num_discs   % place all circles 
     % calculate grid row and column
     row = floor((i - 1) / sqrt(num_discs)) + 1;
@@ -59,25 +61,6 @@ for i = 1:num_discs   % place all circles
     
     % store the origin coordinates
     org_coord(i, :) = [center_x, center_y];
-
-    % Initialize arrays to store x and y coordinates
-    %circle_x = zeros(1, circ_points);
-    %circle_y = zeros(1, circ_points);
-    circle_x_point = cell(1, num_discs);
-    circle_y_point = cell(1, num_discs);
-    % Calculate coordinates for each point on the circle
-    for j = 1:circ_points
-        % Generate random radius within the target radius
-        r = rand(1) * target;
-        % Generate random angle
-        angle = rand(1) * 2 * pi;
-        % Compute x and y coordinates using polar coordinates
-        circle_x_point{j} = center_x + r * cos(angle);
-        circle_y_point{j} = center_y + r * sin(angle);
-    end
-   
-    % store the full coordinates 
-    circle_coord{i} = [circle_x_point; circle_y_point];
 
     % plot the disc clipped by the larger circle mask
     disc_masked = mask & ((X - center_x).^2 + (Y - center_y).^2 <= target^2);
@@ -120,19 +103,22 @@ num_points= 1000; % getting all points for walk
 step_size = 1;  % step size for grid
 theta = linspace(0, 2*pi, num_points); % angle range for points 
 counter = 0; %initialize step counter 
-limit=tsteps*5
-hit_counter = zeros(1, limit); % Initialize hit counter for each target
+%results = zeros(1, tsteps);  % array for counter results
+hit_counter = zeros(1, num_discs); % Initialize hit counter for each target
+ 
+
+%results = zeros(1, num_runs);  % array for counter results
 
 % Initialize arrays to hold the x and y positions
 x = zeros(tsteps, 1);
 y = zeros(tsteps, 1);
 
+circle_x = cell(num_discs, 1);  % Initialize as cell array
+circle_y = cell(num_discs, 1);  % Initialize as cell array
 for i = 1:num_discs
     % Calculate coordinates for each circle
     circle_x{i} = org_coord(i, 1) + target * cos(theta);
     circle_y{i} = org_coord(i, 2) + target * sin(theta);
-    circle_x_point{i} = zeros(1, circ_points);
-    circle_y_point{i} = zeros(1, circ_points);
 end 
 
 % open the file again for appending data%%%%%%%%%%%%%%%%%%%%
@@ -154,17 +140,16 @@ for run = 1:num_runs
 
         % Check if the particle is at any target
         for k = 1:num_discs       
-            if any(abs(xbound - circle_x_point{k}) <= step_size/4 & abs(ybound - circle_y_point{k}) <= step_size/4)
+            if any(abs(xbound - circle_x{k}) <= step_size/4 & abs(ybound - circle_y{k}) <= step_size/4)
                 hit_counter(k) = hit_counter(k) + 1; % Increment hit counter for the target
                 fprintf('Random walk has hit target %d!\n', k);
                 % Calculate the number of steps to hit the target
-                %steps_to_hit = step - sum(hit_counter(1:k-1));
-                steps_to_hit = abs(step - sum(hit_counter(1:k-1)));
+                steps_to_hit = step - sum(hit_counter(1:k-1));
                 % Write data to the CSV file
                 fprintf(fileID, '%d,%d,%d\n', k, hit_counter(k), steps_to_hit);
                 x(step) = xbound; % update pos
                 y(step) = ybound;
-                continue;
+                %continue;
             elseif norm([xbound,ybound]) >= radius %is it beyond the boundary?
                 x(step) = x(step-2);
                 y(step) = y(step-2); 
@@ -189,19 +174,11 @@ opts.VariableNamesLine = 1; % Assuming the headers are in the first line
 opts.VariableNamingRule = 'preserve'; % Preserve original column headers
 data = readtable(filename, opts);
 % Extract the steps to hit from the data and convert to array
-steps_to_hit = table2array(data(:, 3));
+hit_counter = table2array(data(:, 2));
 
 % Plot the histogram
-histogram(steps_to_hit, 'BinWidth', 1);  %'BinWidth', 1, 'Normalization', 'probability'
+histogram(hit_counter, 'BinWidth', 1);  %'BinWidth', 1, 'Normalization', 'probability'
 xlabel('Steps to Hit', 'FontSize', 14);
 ylabel('count', 'FontSize', 14);
 title(['Histogram of Steps to Hit (' , num2str(num_discs), 'discs and ' num2str(target), ' target radius)']);
-xlim([0, 350])
-% Retrieve the current y-axis tick values
-%yTicks = get(gca, 'YTick');
-
-% Convert the tick values to strings without scientific notation
-%yTickLabels = arrayfun(@(x) sprintf('%d', x), yTicks, 'UniformOutput', false);
-
-% Apply the new tick labels to the y-axis
-%set(gca, 'YTickLabel', yTickLabels);
+xlim([0, 50])
