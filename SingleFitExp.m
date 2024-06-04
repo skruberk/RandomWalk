@@ -1,3 +1,5 @@
+%%mass input of data to fit a single-term exponential, outputs data to a csv%%
+
 clc;    % Clear the command window.
 clearvars;
 close all;  % Close all figs
