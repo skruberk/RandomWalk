@@ -1,71 +1,13 @@
+%this fits a two term exponential%%%%%
+
 clc;    % Clear the command window.
 clearvars;
 close all;  % Close all figs
-
-%hits_boundarywrap_30_5.000000e-01_10000_1000_1
-%hits_boundarywrap_5_5.000000e-01_10000_1000_1
-%hits_boundarywrap_20_5.000000e-01_10000_1000_1
-%hits_boundarywrap_10_5.000000e-01_10000_1000_1
-%hits_boundarywrap_10_2_10000_1000_1
-%hits_boundarywrap_15_2_10000_1000_1
-%hits_boundarywrap_20_2_10000_1000_1
-%hits_boundarywrap_30_2_10000_1000_1
-%hits_boundarywrap_5_2_10000_1000_1
-%hits_boundarywrap_3_2_10000_1000_1
-%hits_boundarywrap_3_1_10000_1000_1
-%hits_boundarywrap_15_1_10000_1000_1
-%hits_boundarywrap_5_1_10000_1000_1
-%hits_boundarywrap_30_1_10000_1000_1
-%hits_boundarywrap_20_1_10000_1000_1
-%hits_boundarywrap_10_1_10000_1000_1
-%hits_boundarywrap_15_2_10000_1000_1
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%hits_boundarywrap_3_3.000000e-01_10000_1000_1
-%hits_boundarywrap_30_3.000000e-01_10000_1000_1
-%hits_boundarywrap_10_3.000000e-01_10000_1000_1
-%hits_boundarywrap_10_3.000000e-01_10000_1000_1.000000e-01
-%hits_boundarywrap_3_3.000000e-01_10000_1000_1.000000e-01
-%hits_boundarywrap_30_3.000000e-01_10000_1000_1.000000e-01
-%hits_boundarywrap_30_2_10000_1000_1.000000e-01
-%hits_boundarywrap_20_2_10000_1000_1.000000e-01
-%hits_boundarywrap_15_2_10000_1000_1.000000e-01
-%hits_boundarywrap_10_2_10000_1000_1.000000e-01
-%hits_boundarywrap_5_2_10000_1000_1.000000e-01
-%hits_boundarywrap_3_2_10000_1000_1.000000e-01
-%hits_boundarywrap_3_1_10000_1000_1.000000e-01
-%hits_boundarywrap_5_1_10000_1000_1.000000e-01
-%hits_boundarywrap_10_1_10000_1000_1.000000e-01
-%hits_boundarywrap_15_1_10000_1000_1.000000e-01
-%hits_boundarywrap_20_1_10000_1000_1.000000e-01
-%hits_boundarywrap_30_1_10000_1000_1.000000e-01
-%hits_boundarywrap_30_5.000000e-01_10000_1000_1.000000e-01
-%hits_boundarywrap_20_5.000000e-01_10000_1000_1.000000e-01
-%hits_boundarywrap_15_5.000000e-01_10000_1000_1.000000e-01
-%hits_boundarywrap_10_5.000000e-01_10000_1000_1.000000e-01
-%hits_boundarywrap_5_5.000000e-01_10000_1000_1.000000e-01
-%hits_boundarywrap_3_5.000000e-01_10000_1000_1.000000e-01
-%hits_boundarywrap_15_5.000000e-01_10000_1000_1
-%hits_boundarywrap_3_5.000000e-01_10000_1000_1
-
-
-%hits_boundarywrap_10_1.500000e+00_10000_1000_1
-%hits_boundarywrap_5_2.500000e+00_10000_1000_1
-%hits_boundarywrap_10_2.500000e+00_10000_1000_1
-%hits_boundarywrap_15_2.500000e+00_10000_1000_1
-%hits_boundarywrap_20_2.500000e+00_10000_1000_1
-%hits_boundarywrap_30_2.500000e+00_10000_1000_1
-%hits_boundarywrap_30_1.500000e+00_10000_1000_1
-%hits_boundarywrap_20_1.500000e+00_10000_1000_1
-%hits_boundarywrap_15_1.500000e+00_10000_1000_1
-%hits_boundarywrap_5_1.500000e+00_10000_1000_1
-%
-%
 %
 % import from csv
-filename = 'hits_boundarywrap_5_1.500000e+00_10000_1000_1.csv';
+filename = 'filename.csv';
 dataTable = readtable(filename, 'VariableNamingRule', 'preserve'); 
 printFile = strrep(filename, '_', ' ');
-
 
 % Read the column of CSV file
 data = dataTable{:, 3};
