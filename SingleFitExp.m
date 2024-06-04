@@ -1,11 +1,16 @@
-'"hits_boundarywrap_3_3.000000e-01_10000_1000_1.000000e-01.csv"'
-
 clc;    % Clear the command window.
 clearvars;
 close all;  % Close all figs
 
-% import from csv
-    filename = 'hits_boundarywrap_3_3.000000e-01_10000_1000_1.000000e-01.csv';
+filelist = readtable('filename.csv','VariableNamingRule', 'preserve');
+
+% Loop over each filename
+for i = 1:size(filelist, 1)
+     % Get the filenames
+    filename = filelist.filename{i}
+    filename = strrep(filename, '"', ''); % Remove double quotes
+    % import from csv
+    %filename = 'hits_boundarywrap_15_1.500000e+00_10000_1000_1.csv';
     dataTable = readtable(filename, 'VariableNamingRule', 'preserve'); 
     printFile = strrep(filename, '_', ' '); %for output
     
@@ -41,8 +46,8 @@ close all;  % Close all figs
     % Initial guesses into vector
     expModel = @(b, x) b(1) * exp(b(2) * x) + b(3);
     initialAmplitude = max(yData);
-    initialDecayRate = -0.001;
-    initialOffset = 1000;
+    initialDecayRate = -0.01;
+    initialOffset = 10000;
     initialGuess = [initialAmplitude, initialDecayRate, initialOffset];
     
     % Nonlinear model to fit the data, with tolerances
@@ -107,9 +112,9 @@ close all;  % Close all figs
     
     % File handling
     % Open a file for writing
-    fileID = fopen('OutputExp1.csv', 'a'); % 'w' for write, 'a' for append   
+    fileID = fopen('OutputExp.csv', 'a'); % 'w' for write, 'a' for append   
     % Check if the file is empty and write headers if it is
-    fileInfo = dir('OutputExp1.csv');
+    fileInfo = dir('OutputExp.csv');
     if fileInfo.bytes == 0
         fprintf(fileID, 'filename,slope,exponent,beta1,beta2,beta3\n');
     else
@@ -122,3 +127,4 @@ close all;  % Close all figs
     %fprintf(fileID, '%s,%.4f,%.4f,%.4f,%.4f\n', printFile,slope,num2str(beta(1),'%.4f'),num2str(beta(2),'%.4f')num2str(beta(3),'%.4f')num2str(beta(4),'%.4f'));
     fprintf(fileID, '%s,%.4f,%.4f,%.4f,%.4f,%.4f', printFile, slope, exponent,beta(1), beta(2), beta(3));
     fclose(fileID);
+end
