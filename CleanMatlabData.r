@@ -1,3 +1,6 @@
+#Cleans output data from randomwalks where histograms of steps to hit are generated, for inpuut into fitting 
+#for an exponential 
+
 library(dplyr)
 library(tidyr)
 library(janitor)
