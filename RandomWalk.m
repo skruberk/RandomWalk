@@ -8,6 +8,7 @@
 %hit
 %runs the code a number of times and generates a plot of the walk, also
 %plots each of the target positions 
+%copyright 2024, KS, RDM 
 
 clc;    % Clear the command window.
 clearvars;
