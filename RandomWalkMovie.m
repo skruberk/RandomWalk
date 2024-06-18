@@ -8,7 +8,7 @@
 %hit
 %runs the code a number of times and generates a movie of the walk, also
 %plots each of the target positions 
-
+%copyright 2024, KS and RDM 
 clc;    % Clear the command window.
 clearvars;
 close all;  % Close all figs
