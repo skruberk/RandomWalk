@@ -14,6 +14,7 @@ clc;    % Clear the command window.
 clearvars;
 %close all;  % Close all figs
 workspace;  % Make sure the workspace panel is showing.
+%copyright 2024, KS and RDM 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Get the variables to run each time from a file % import from csv a table with num_discs,target
 runfile =  "runfile.csv";
