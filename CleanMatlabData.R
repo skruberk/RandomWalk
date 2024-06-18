@@ -1,5 +1,6 @@
 #Cleans output data from randomwalks where histograms of steps to hit are generated, for inpuut into fitting 
 #for an exponential 
+#copyright 2024, KS
 
 library(dplyr)
 library(tidyr)
